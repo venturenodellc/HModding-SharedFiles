@@ -1,0 +1,518 @@
+/**
+ * Card Selector Component
+ * A reusable card-based selection component for games, mod loaders, servers, etc.
+ * Supports single and multiple selection modes with modal search
+ * 
+ * @version 1.0.0
+ * @author HModding
+ */
+
+/* ==========================================================================
+   Container Styles
+   ========================================================================== */
+
+:root {
+  --cs-primary: #0d6efd;
+  --cs-primary-rgb: 13, 110, 253;
+  --cs-border-radius: 0.75rem;
+  --cs-card-height: 120px;
+  --cs-transition: all 0.25s ease;
+}
+
+.card-selector-container {
+  position: relative;
+}
+
+.card-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.card-selector-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--si-body-color);
+  font-size: 1rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.card-selector-title i {
+  flex-shrink: 0;
+}
+
+.card-selector-selected {
+  font-size: 0.8rem;
+  color: var(--si-secondary-color);
+}
+
+.card-selector-selected-name {
+  color: var(--si-primary);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Card Grid
+   ========================================================================== */
+
+.card-selector-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+}
+
+.card-selector-item {
+  flex: 0 0 auto;
+  min-width: 140px;
+  max-width: 200px;
+  cursor: pointer;
+  transition: var(--cs-transition);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card-selector-item.compact {
+  min-width: 100px;
+  max-width: 140px;
+}
+
+/* ==========================================================================
+   Card Styles
+   ========================================================================== */
+
+.card-selector-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  height: var(--cs-card-height);
+  background: var(--si-dark-700, #1a1e2c);
+  border: 2px solid transparent;
+  border-radius: var(--cs-border-radius);
+  transition: border-color 0.15s ease-in-out;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Prevent image dragging */
+.card-selector-card img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Card logo - centered on card (for bannerOnly mode) */
+.card-selector-card .card-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 80%;
+  max-height: 70%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  z-index: 2;
+}
+
+.card-selector-card:hover {
+  border-color: var(--si-dark-border-color, #252b3b);
+}
+
+/* Selected State */
+.card-selector-item.selected .card-selector-card {
+  border-color: var(--si-primary);
+  background: var(--si-dark-700, #1a1e2c);
+}
+
+/* ==========================================================================
+   Card Content
+   ========================================================================== */
+
+.card-selector-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--card-accent-color, var(--si-body-color));
+}
+
+.card-selector-item.selected .card-selector-icon {
+  color: var(--si-primary);
+}
+
+.card-selector-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--si-body-color);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.card-selector-meta {
+  font-size: 0.7rem;
+  color: var(--si-secondary-color);
+  margin-top: 0.25rem;
+}
+
+/* Background Banner */
+.card-selector-card[data-banner] {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.card-selector-card[data-banner]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+  border-radius: var(--cs-border-radius);
+  z-index: 0;
+}
+
+.card-selector-card[data-banner] .card-selector-icon,
+.card-selector-card[data-banner] .card-selector-name,
+.card-selector-card[data-banner] .card-selector-meta {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   See All / See More Card
+   ========================================================================== */
+
+.card-selector-see-more {
+  cursor: pointer;
+}
+
+.card-selector-see-more .card-selector-card {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--si-dark-border-color, #252b3b);
+}
+
+.card-selector-see-more .card-selector-card:hover {
+  background: var(--si-dark-700, #1a1e2c);
+  border-color: var(--si-primary);
+  border-style: solid;
+}
+
+.card-selector-see-more .card-selector-icon {
+  color: var(--si-secondary-color);
+}
+
+.card-selector-see-more:hover .card-selector-icon {
+  color: var(--si-primary);
+}
+
+.card-selector-see-more .card-selector-name {
+  color: var(--si-secondary-color);
+}
+
+.card-selector-see-more:hover .card-selector-name {
+  color: var(--si-primary);
+}
+
+/* ==========================================================================
+   Modal Styles
+   ========================================================================== */
+
+.card-selector-modal .modal-content {
+  background: var(--si-dark-body-bg, #0b0f19);
+  border: 1px solid var(--si-dark-border-color, #252b3b);
+}
+
+.card-selector-modal .modal-header {
+  border-bottom-color: var(--si-dark-border-color, #252b3b);
+}
+
+.card-selector-modal .modal-title {
+  font-weight: 600;
+  color: var(--si-light);
+}
+
+.card-selector-modal .modal-body {
+  padding: 0;
+}
+
+/* Search Container */
+.card-selector-search-container {
+  position: sticky;
+  top: 0;
+  background: var(--si-dark-body-bg, #0b0f19);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--si-dark-border-color, #252b3b);
+  z-index: 10;
+}
+
+.card-selector-search {
+  position: relative;
+}
+
+.card-selector-search input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background: var(--si-dark-700, #1a1e2c);
+  border: 1px solid var(--si-dark-600, #252b3b);
+  border-radius: 0.375rem;
+  color: var(--si-light);
+  font-size: 0.95rem;
+}
+
+.card-selector-search input:focus {
+  outline: none;
+  border-color: var(--si-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--si-primary-rgb), 0.25);
+  background: var(--si-dark-600, #252b3b);
+}
+
+.card-selector-search input::placeholder {
+  color: var(--si-secondary-color);
+}
+
+.card-selector-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--si-secondary-color);
+  pointer-events: none;
+}
+
+.card-selector-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--si-secondary-color);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: none;
+}
+
+.card-selector-search-clear.visible {
+  display: block;
+}
+
+.card-selector-search-clear:hover {
+  color: var(--si-body-color);
+}
+
+/* Modal Grid */
+.card-selector-modal-grid-container {
+  max-height: calc(60vh - 80px);
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.card-selector-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.card-selector-modal-grid .card-selector-item {
+  min-width: unset;
+  max-width: unset;
+  width: 100%;
+}
+
+.card-selector-modal-grid .card-selector-card {
+  height: 120px;
+  border-radius: var(--cs-border-radius);
+}
+
+/* Modal Scrollbar */
+.card-selector-modal-grid-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-selector-modal-grid-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-selector-modal-grid-container::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--cs-primary-rgb), 0.6);
+  border-radius: 4px;
+}
+
+.card-selector-modal-grid-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--cs-primary-rgb), 0.8);
+}
+
+/* No Results */
+.card-selector-no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--si-secondary-color);
+}
+
+.card-selector-no-results i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.card-selector-no-results p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   Multiple Selection Mode
+   ========================================================================== */
+
+.card-selector[data-multiple="true"] .card-selector-selected-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(var(--cs-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--cs-primary-rgb), 0.3);
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  color: var(--cs-primary);
+}
+
+.card-selector[data-multiple="true"] .card-selector-clear-btn {
+  background: none;
+  border: none;
+  color: var(--cs-primary);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  opacity: 0.7;
+  transition: var(--cs-transition);
+}
+
+.card-selector[data-multiple="true"] .card-selector-clear-btn:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Compact Horizontal Layout
+   ========================================================================== */
+
+.card-selector.horizontal .card-selector-grid {
+  flex-wrap: nowrap;
+  padding-bottom: 0;
+}
+
+/* ==========================================================================
+   Disabled State
+   ========================================================================== */
+
+.card-selector-item.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.card-selector-item.disabled .card-selector-card {
+  filter: grayscale(50%);
+}
+
+/* ==========================================================================
+   Loading State
+   ========================================================================== */
+
+.card-selector-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--si-secondary-color);
+}
+
+.card-selector-loading .spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+/* ==========================================================================
+   Banner Only Mode
+   Hide icon, name, meta, and ::after overlay - only show banner/background
+   Cards without banners (like "All Games" or "See More") still show icon/name
+   ========================================================================== */
+
+.card-selector.banner-only .card-selector-card::after,
+.card-selector-modal.banner-only .card-selector-card::after {
+  display: none !important;
+}
+
+.card-selector.banner-only .card-selector-icon,
+.card-selector.banner-only .card-selector-name,
+.card-selector.banner-only .card-selector-meta,
+.card-selector-modal.banner-only .card-selector-icon,
+.card-selector-modal.banner-only .card-selector-name,
+.card-selector-modal.banner-only .card-selector-meta {
+  display: none !important;
+}
+
+/* Exception: Cards without banners should still show icon/name (e.g., "All Games", "See More") */
+.card-selector.banner-only .card-selector-card:not([data-banner]) .card-selector-icon,
+.card-selector.banner-only .card-selector-card:not([data-banner]) .card-selector-name,
+.card-selector.banner-only .card-selector-see-more .card-selector-icon,
+.card-selector.banner-only .card-selector-see-more .card-selector-name,
+.card-selector-modal.banner-only .card-selector-card:not([data-banner]) .card-selector-icon,
+.card-selector-modal.banner-only .card-selector-card:not([data-banner]) .card-selector-name {
+  display: flex !important;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .card-selector-item {
+    min-width: 110px;
+    max-width: 150px;
+  }
+  
+  .card-selector-card {
+    height: 100px;
+    padding: 0.75rem;
+  }
+  
+  .card-selector-icon {
+    font-size: 1.5rem;
+  }
+  
+  .card-selector-name {
+    font-size: 0.75rem;
+  }
+  
+  .card-selector-modal-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .card-selector-modal-grid .card-selector-card {
+    height: 100px;
+  }
+}
+
+@media (max-width: 576px) {
+  .card-selector-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .card-selector.horizontal .card-selector-grid {
+    -webkit-overflow-scrolling: touch;
+  }
+}

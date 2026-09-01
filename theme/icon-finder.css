@@ -1,0 +1,288 @@
+/* Icon Finder Component
+ * A FontAwesome icon picker dropdown that displays icons in a grid
+ * Built on top of custom-select styling
+ */
+
+/* Icon Finder Container */
+.icon-finder-dropdown {
+  position: relative;
+  z-index: 100;
+}
+
+/* Elevated z-index when open */
+.icon-finder-dropdown.show {
+  z-index: 99999;
+}
+
+/* Toggle Button */
+.icon-finder-dropdown .icon-finder-toggle {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.icon-finder-dropdown .icon-finder-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Selected display with icon on left */
+.icon-finder-dropdown .icon-finder-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon-finder-dropdown .icon-finder-selected .selected-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--si-primary-rgb), 0.15);
+  border-radius: 6px;
+  color: var(--si-primary);
+  font-size: 0.9rem;
+}
+
+.icon-finder-dropdown .icon-finder-selected .selected-name {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Custom chevron icon */
+.icon-finder-dropdown .icon-finder-toggle .fa-chevron-down {
+  transition: transform 0.2s ease-in-out;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* Active state */
+.icon-finder-dropdown .icon-finder-toggle:active {
+  border-color: rgba(4, 131, 250, 0.35);
+  outline: 0;
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0), 0 0 0 0 rgba(4, 131, 250, 0.25);
+}
+
+/* Open state */
+.icon-finder-dropdown.show .icon-finder-toggle {
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--si-dark-800) !important;
+  color: #fff !important;
+  border-color: rgba(4, 131, 250, 0.5);
+}
+
+/* Rotate chevron when open */
+.icon-finder-dropdown.show .icon-finder-toggle .fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+/* Absolute positioned menu */
+.icon-finder-menu {
+  position: fixed !important;
+  z-index: 999999 !important;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)), var(--si-dark-900);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  min-width: 320px;
+  max-width: 400px;
+  display: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Search input in dropdown */
+.icon-finder-menu .icon-finder-search {
+  margin-bottom: 0.75rem;
+}
+
+.icon-finder-menu .icon-finder-search input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2.25rem;
+  font-size: 0.875rem;
+  background: var(--si-dark-800);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.375rem;
+  color: rgba(255, 255, 255, 0.85);
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.icon-finder-menu .icon-finder-search input:focus {
+  border-color: rgba(4, 131, 250, 0.5);
+}
+
+.icon-finder-menu .icon-finder-search input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.icon-finder-menu .icon-finder-search-wrapper {
+  position: relative;
+}
+
+.icon-finder-menu .icon-finder-search-wrapper .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* Icons grid */
+.icon-finder-menu .icon-finder-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 44px);
+  grid-auto-rows: 44px;
+  gap: 6px;
+  min-height: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+  align-content: start;
+}
+
+/* Icon option in grid */
+.icon-finder-menu .icon-option {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+}
+
+.icon-finder-menu .icon-option:hover {
+  border-color: var(--si-primary);
+  background: rgba(var(--si-primary-rgb), 0.1);
+  color: var(--si-primary);
+}
+
+.icon-finder-menu .icon-option.selected {
+  border-color: var(--si-primary);
+  background: rgba(var(--si-primary-rgb), 0.2);
+  color: var(--si-primary);
+}
+
+/* No results message */
+.icon-finder-menu .icon-finder-no-results {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.875rem;
+  gap: 0.75rem;
+}
+
+.icon-finder-menu .icon-finder-no-results i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+/* Loading state */
+.icon-finder-menu .icon-finder-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.icon-finder-menu .icon-finder-loading i {
+  font-size: 1.5rem;
+}
+
+/* Prompt state (type to search) */
+.icon-finder-menu .icon-finder-prompt {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.875rem;
+  gap: 0.75rem;
+}
+
+.icon-finder-menu .icon-finder-prompt i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+/* Results count */
+.icon-finder-menu .icon-finder-count {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+
+/* Custom scrollbar for the icon grid */
+.icon-finder-menu .icon-finder-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.icon-finder-menu .icon-finder-grid::-webkit-scrollbar-track {
+  background: var(--si-dark-800);
+  border-radius: 3px;
+}
+
+.icon-finder-menu .icon-finder-grid::-webkit-scrollbar-thumb {
+  background: var(--si-dark-600);
+  border-radius: 3px;
+}
+
+.icon-finder-menu .icon-finder-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--si-dark-500);
+}
+
+/* Size variants */
+.icon-finder-dropdown.icon-finder-sm .icon-finder-toggle {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.icon-finder-dropdown.icon-finder-sm .icon-finder-selected .selected-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 0.8rem;
+}
+
+.icon-finder-dropdown.icon-finder-lg .icon-finder-toggle {
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+}
+
+.icon-finder-dropdown.icon-finder-lg .icon-finder-selected .selected-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
