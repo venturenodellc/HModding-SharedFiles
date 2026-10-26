@@ -114,6 +114,18 @@ class CardSelector {
     // Recalculate on resize
     this.resizeHandler = () => this.adjustVisibleItems();
     window.addEventListener('resize', this.resizeHandler);
+
+    // Also recalculate when the container itself changes width (fonts, sidebar, etc.)
+    if (typeof ResizeObserver !== 'undefined') {
+      let lastWidth = 0;
+      this.resizeObserver = new ResizeObserver(entries => {
+        const width = Math.round(entries[0].contentRect.width);
+        if (width === lastWidth || width === 0) return;
+        lastWidth = width;
+        this.adjustVisibleItems();
+      });
+      this.resizeObserver.observe(this.container);
+    }
   }
   
   /**
@@ -122,6 +134,10 @@ class CardSelector {
   destroy() {
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
     if (this.modal) {
       this.modal.dispose();
@@ -266,9 +282,12 @@ class CardSelector {
     }
     
     grid.innerHTML = html;
-    
+
     // Recalculate visible items
-    requestAnimationFrame(() => this.adjustVisibleItems());
+    requestAnimationFrame(() => {
+      this.adjustVisibleItems();
+      requestAnimationFrame(() => this.adjustVisibleItems());
+    });
   }
   
   /**
@@ -355,6 +374,34 @@ class CardSelector {
     } else {
       // All items fit - hide see-more card
       seeMoreCard.style.display = 'none';
+    }
+
+    // Measurements can be off before layout settles, so check the row actually fits
+    this.trimToFit(grid, items, seeMoreCard, visibleCount);
+  }
+
+  /**
+   * Hide cards until the row fits its container
+   */
+  trimToFit(grid, items, seeMoreCard, visibleCount) {
+    let shown = visibleCount;
+
+    for (let i = 0; i < items.length && shown > 0; i++) {
+      if (grid.scrollWidth <= grid.clientWidth + 1) break;
+
+      shown--;
+      items[shown].style.display = 'none';
+
+      const hidden = items.length - shown;
+      const nameEl = seeMoreCard.querySelector('.card-selector-name');
+      if (nameEl) {
+        nameEl.textContent = `+${hidden} More`;
+      }
+      seeMoreCard.style.display = '';
+      seeMoreCard.style.visibility = '';
+      // Let the see-more card fill the space left by hidden cards
+      seeMoreCard.style.flex = '1 1 auto';
+      seeMoreCard.style.minWidth = '100px';
     }
   }
 
