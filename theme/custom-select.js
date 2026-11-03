@@ -33,6 +33,9 @@
  * </script>
  */
 
+// Gap kept between an open menu and the window edges
+const MENU_VIEWPORT_MARGIN = 10;
+
 // Global registry to track all open custom selects
 const CustomSelectRegistry = {
   openInstances: new Map(), // Map of dropdown element -> hideMenu function
@@ -381,7 +384,7 @@ const CustomSelect = {
         visibility: hidden;
         opacity: 0;
         min-width: ${dropdown.offsetWidth}px;
-        max-width: ${dropdown.offsetWidth}px;
+        max-width: calc(100vw - ${MENU_VIEWPORT_MARGIN * 2}px);
         background: linear-gradient(0deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)), var(--si-dark-900);
         border: 1px solid rgba(255, 255, 255, 0.14);
         box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.3);
@@ -413,9 +416,11 @@ const CustomSelect = {
       // Get button's position relative to viewport (since we use position: fixed)
       const rect = dropdown.getBoundingClientRect();
       
-      // Update width to match current dropdown width
-      absoluteMenu.style.minWidth = `${rect.width}px`;
-      absoluteMenu.style.maxWidth = `${rect.width}px`;
+      // At least as wide as the dropdown, wider when the options need it, never wider than the window.
+      // Measured from the left edge, since a fixed element's auto width shrinks to the space right of it.
+      absoluteMenu.style.minWidth = `${Math.min(rect.width, window.innerWidth - MENU_VIEWPORT_MARGIN * 2)}px`;
+      absoluteMenu.style.maxWidth = `${window.innerWidth - MENU_VIEWPORT_MARGIN * 2}px`;
+      absoluteMenu.style.left = '0px';
       
       const menuHeight = absoluteMenu.offsetHeight || 250;
 
@@ -429,15 +434,13 @@ const CustomSelect = {
         top = rect.top - menuHeight - 2;
       }
 
-      // Ensure menu doesn't go off-screen right
+      // Keep a gap to both sides of the window
       const menuWidth = absoluteMenu.offsetWidth || rect.width;
-      if (left + menuWidth > window.innerWidth) {
-        left = window.innerWidth - menuWidth - 10;
+      if (left + menuWidth > window.innerWidth - MENU_VIEWPORT_MARGIN) {
+        left = window.innerWidth - menuWidth - MENU_VIEWPORT_MARGIN;
       }
-
-      // Ensure menu doesn't go off-screen left
-      if (left < 0) {
-        left = 10;
+      if (left < MENU_VIEWPORT_MARGIN) {
+        left = MENU_VIEWPORT_MARGIN;
       }
 
       absoluteMenu.style.top = `${top}px`;
