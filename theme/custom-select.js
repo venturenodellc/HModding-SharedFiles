@@ -216,11 +216,11 @@ const CustomSelect = {
           type="button"
           aria-expanded="false"
         >
-          <span class="dropdown-selected-text">${placeholder}</span>
+          <span class="dropdown-selected-text">${CustomSelect.escapeHtml(placeholder)}</span>
           <i class="fa-solid fa-chevron-down fs-xs ms-2"></i>
         </button>
         <ul class="dropdown-menu dropdown-menu-dark w-100" id="${id}Menu"></ul>
-        <input type="hidden" id="${id}Input" name="${id}" value="${value}">
+        <input type="hidden" id="${id}Input" name="${id}" value="${CustomSelect.escapeHtml(value)}">
       </div>
     `;
 
@@ -319,7 +319,7 @@ const CustomSelect = {
     if (!menu) return;
 
     // Check if option already exists
-    const existing = menu.querySelector(`[data-value="${option.value}"]`);
+    const existing = CustomSelect.findItem(menu, option.value);
     if (existing) return;
 
     const isActive = option.value === currentValue;
@@ -529,7 +529,7 @@ const CustomSelect = {
         // Toggle active state in both menus
         [menu, absoluteMenu].forEach(m => {
           if (m) {
-            const correspondingItem = m.querySelector(`[data-value="${value}"]`);
+            const correspondingItem = CustomSelect.findItem(m, value);
             if (correspondingItem) {
               correspondingItem.classList.toggle('active', !isActive);
             }
@@ -549,14 +549,14 @@ const CustomSelect = {
         // Update display text
         if (selectedTextEl) {
           if (selectedValues.length === 0) {
-            selectedTextEl.innerHTML = `<i class="fa-solid fa-layer-group me-2"></i>${placeholder}`;
+            selectedTextEl.innerHTML = `<i class="fa-solid fa-layer-group me-2"></i>${CustomSelect.escapeHtml(placeholder)}`;
           } else if (selectedValues.length === 1) {
             // Show the single selected item with its icon
             const singleItem = (absoluteMenu || menu).querySelector('.dropdown-item.active');
             const singleIcon = singleItem ? CustomSelect.getIconHtml(singleItem) : '';
-            selectedTextEl.innerHTML = singleIcon + selectedTexts[0];
+            selectedTextEl.innerHTML = singleIcon + CustomSelect.escapeHtml(selectedTexts[0]);
           } else {
-            selectedTextEl.innerHTML = `<i class="fa-solid fa-check-double me-2"></i>${selectedText.replace('{count}', selectedValues.length)}`;
+            selectedTextEl.innerHTML = `<i class="fa-solid fa-check-double me-2"></i>${CustomSelect.escapeHtml(selectedText.replace('{count}', selectedValues.length))}`;
           }
         }
         
@@ -575,7 +575,7 @@ const CustomSelect = {
         // Single selection mode (existing behavior)
         // Update UI
         if (selectedTextEl) {
-          selectedTextEl.innerHTML = iconHtml + text;
+          selectedTextEl.innerHTML = iconHtml + CustomSelect.escapeHtml(text);
         }
         if (hiddenInput) {
           hiddenInput.value = value;
@@ -585,7 +585,7 @@ const CustomSelect = {
         [menu, absoluteMenu].forEach(m => {
           if (m) {
             m.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
-            const correspondingItem = m.querySelector(`[data-value="${value}"]`);
+            const correspondingItem = CustomSelect.findItem(m, value);
             if (correspondingItem) {
               correspondingItem.classList.add('active');
             }
@@ -593,6 +593,8 @@ const CustomSelect = {
         });
 
         hideMenu();
+        // keep focus inside a parent modal so escape still reaches it
+        button.focus({ preventScroll: true });
 
         // Trigger change callback
         if (onChange) {
@@ -688,14 +690,14 @@ const CustomSelect = {
         const selectedTexts = Array.from(selectedItems).map(i => CustomSelect.getCleanText(i));
         
         if (values.length === 0) {
-          selectedTextEl.innerHTML = `<i class="fa-solid fa-layer-group me-2"></i>${config.placeholder || 'Select options'}`;
+          selectedTextEl.innerHTML = `<i class="fa-solid fa-layer-group me-2"></i>${CustomSelect.escapeHtml(config.placeholder || 'Select options')}`;
         } else if (values.length === 1) {
           const singleItem = menu.querySelector('.dropdown-item.active');
           const singleIcon = singleItem ? CustomSelect.getIconHtml(singleItem) : '';
-          selectedTextEl.innerHTML = singleIcon + selectedTexts[0];
+          selectedTextEl.innerHTML = singleIcon + CustomSelect.escapeHtml(selectedTexts[0]);
         } else {
           const textFormat = config.selectedText || '{count} selected';
-          selectedTextEl.innerHTML = `<i class="fa-solid fa-check-double me-2"></i>${textFormat.replace('{count}', values.length)}`;
+          selectedTextEl.innerHTML = `<i class="fa-solid fa-check-double me-2"></i>${CustomSelect.escapeHtml(textFormat.replace('{count}', values.length))}`;
         }
       }
     } else {
@@ -713,7 +715,7 @@ const CustomSelect = {
               if (selectedTextEl && m === menu) {
                 // Get the icon HTML if present, plus clean text
                 const iconHtml = CustomSelect.getIconHtml(item);
-                selectedTextEl.innerHTML = iconHtml + CustomSelect.getCleanText(item);
+                selectedTextEl.innerHTML = iconHtml + CustomSelect.escapeHtml(CustomSelect.getCleanText(item));
               }
             } else {
               item.classList.remove('active');
@@ -760,10 +762,20 @@ const CustomSelect = {
    * @returns {string} - Escaped text
    */
   escapeHtml: function(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
+
+  // compared as text so quotes in a value can't break a selector
+  findItem: function(menu, value) {
+    if (!menu) return null;
+    const wanted = String(value);
+    return Array.from(menu.querySelectorAll('.dropdown-item')).find(item => item.dataset.value === wanted) || null;
   },
 
   /**
