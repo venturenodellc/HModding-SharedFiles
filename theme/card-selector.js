@@ -207,8 +207,8 @@ class CardSelector {
       html += `
         <div class="card-selector-header">
           <h6 class="card-selector-title">
-            <i class="${this.options.headerIcon}"></i>
-            ${this.options.headerTitle}
+            <i class="${this.escapeHtml(this.options.headerIcon)}"></i>
+            ${this.escapeHtml(this.options.headerTitle)}
           </h6>
           <div class="card-selector-selected">
             ${this.getSelectedDisplay()}
@@ -230,8 +230,8 @@ class CardSelector {
       html += `
         <div class="card-selector-item card-selector-see-more ${this.options.compact ? 'compact' : ''}" style="flex-shrink: 0;">
           <div class="card-selector-card" data-action="see-more">
-            <i class="card-selector-icon ${this.options.seeMoreIcon}"></i>
-            <span class="card-selector-name">${this.options.seeMoreText}</span>
+            <i class="card-selector-icon ${this.escapeHtml(this.options.seeMoreIcon)}"></i>
+            <span class="card-selector-name">${this.escapeHtml(this.options.seeMoreText)}</span>
           </div>
         </div>
       `;
@@ -274,8 +274,8 @@ class CardSelector {
       html += `
         <div class="card-selector-item card-selector-see-more ${this.options.compact ? 'compact' : ''}" style="flex-shrink: 0;">
           <div class="card-selector-card" data-action="see-more">
-            <i class="card-selector-icon ${this.options.seeMoreIcon}"></i>
-            <span class="card-selector-name">${this.options.seeMoreText}</span>
+            <i class="card-selector-icon ${this.escapeHtml(this.options.seeMoreIcon)}"></i>
+            <span class="card-selector-name">${this.escapeHtml(this.options.seeMoreText)}</span>
           </div>
         </div>
       `;
@@ -416,15 +416,17 @@ class CardSelector {
     const selectedClass = isSelected ? 'selected' : '';
     const disabledClass = item.disabled ? 'disabled' : '';
     const compactClass = this.options.compact && !inModal ? 'compact' : '';
+    const color = this.cssColor(item.color);
+    const banner = this.cssUrl(item.banner);
 
     let style = '';
-    if (item.color) {
-      style += `--card-accent-color: ${item.color};`;
+    if (color) {
+      style += `--card-accent-color: ${color};`;
     }
 
     let cardStyle = '';
-    if (item.banner) {
-      cardStyle = `background-image: url('${item.banner}');`;
+    if (banner) {
+      cardStyle = `background-image: url('${this.escapeHtml(banner)}');`;
     }
 
     // Format icon - ensure it has proper FA prefix
@@ -437,14 +439,14 @@ class CardSelector {
 
     return `
       <div class="card-selector-item ${selectedClass} ${disabledClass} ${compactClass}" 
-           data-id="${item.id}" 
+           data-id="${this.escapeHtml(item.id)}" 
            data-name="${this.escapeHtml(item.name)}"
            style="${style}">
         <div class="card-selector-card" 
              style="${cardStyle}"
-             ${item.banner ? 'data-banner="true"' : ''}>
+             ${banner ? 'data-banner="true"' : ''}>
           ${logoHtml}
-          <i class="card-selector-icon ${iconClass}" style="${item.color ? `color: ${item.color};` : ''}"></i>
+          <i class="card-selector-icon ${this.escapeHtml(iconClass)}" style="${color ? `color: ${color};` : ''}"></i>
           <span class="card-selector-name">${this.escapeHtml(item.name)}</span>
           ${item.meta ? `<span class="card-selector-meta">${this.escapeHtml(item.meta)}</span>` : ''}
         </div>
@@ -492,8 +494,8 @@ class CardSelector {
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                <i class="${this.options.headerIcon} me-2"></i>
-                ${this.options.modalTitle}
+                <i class="${this.escapeHtml(this.options.headerIcon)} me-2"></i>
+                ${this.escapeHtml(this.options.modalTitle)}
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -501,7 +503,7 @@ class CardSelector {
               <div class="card-selector-search-container">
                 <div class="input-group">
                   <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                  <input type="text" class="form-control card-selector-search-input" placeholder="${this.options.searchPlaceholder}">
+                  <input type="text" class="form-control card-selector-search-input" placeholder="${this.escapeHtml(this.options.searchPlaceholder)}">
                 </div>
               </div>
               <div class="card-selector-modal-grid-container">
@@ -541,8 +543,8 @@ class CardSelector {
     if (filteredItems.length === 0) {
       return `
         <div class="card-selector-no-results" style="grid-column: 1 / -1;">
-          <i class="${this.options.noResultsIcon}"></i>
-          <p>${this.options.noResultsText}</p>
+          <i class="${this.escapeHtml(this.options.noResultsIcon)}"></i>
+          <p>${this.escapeHtml(this.options.noResultsText)}</p>
         </div>
       `;
     }
@@ -743,7 +745,7 @@ class CardSelector {
   getSelectedDisplay() {
     if (this.options.multiple) {
       if (this.selected.length === 0) {
-        return `<span class="text-muted">${this.options.placeholder}</span>`;
+        return `<span class="text-muted">${this.escapeHtml(this.options.placeholder)}</span>`;
       }
       return `
         <span class="card-selector-selected-count">
@@ -757,7 +759,7 @@ class CardSelector {
     }
     
     if (!this.selected) {
-      return `<span class="text-muted">${this.options.placeholder}</span>`;
+      return `<span class="text-muted">${this.escapeHtml(this.options.placeholder)}</span>`;
     }
     
     return `<span class="card-selector-selected-name">${this.escapeHtml(this.selected.name)}</span>`;
@@ -901,10 +903,31 @@ class CardSelector {
    * @returns {string} Escaped text
    */
   escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Color for an inline style
+   * @param {string} color - Hex color or color name
+   * @returns {string} The color, or '' when it is anything else
+   */
+  cssColor(color) {
+    return typeof color === 'string' && /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(color) ? color : '';
+  }
+
+  /**
+   * URL for a quoted url('...')
+   * @param {string} url - Image URL
+   * @returns {string} The URL, or '' when it could end the quotes
+   */
+  cssUrl(url) {
+    return typeof url === 'string' && !/['"\\\u0000-\u001f\u007f]/.test(url) ? url : '';
   }
 }
 
